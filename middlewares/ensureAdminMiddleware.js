@@ -1,4 +1,4 @@
-const AppError = require('../error/appError');
+const AppError = require('../errors/appError');
 
 module.exports = (req, res, next) => {
   // não autenticado

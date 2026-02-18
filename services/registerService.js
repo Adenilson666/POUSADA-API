@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const {User} = require('../models');
-const AppError = require('../error/appError');
+const AppError = require('../errors/appError');
 
 
 const registerUser = async ({name, email, password}) => {

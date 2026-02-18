@@ -1,5 +1,5 @@
 const { User } = require('../models');
-const AppError = require('../error/appError');
+const AppError = require('../errors/appError');
 const bcrypt = require('bcrypt');
 
 const listUsers = async ({page = 1, limit = 10}) => {

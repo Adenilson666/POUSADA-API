@@ -1,4 +1,4 @@
-const AppError = require('../error/appError');
+const AppError = require('../errors/appError');
 
 const loginMiddleware = (req, res, next) => {
   let { email, password } = req.body;

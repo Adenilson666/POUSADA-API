@@ -4,7 +4,7 @@ const router = express.Router();
 
 const adminController = require('../controller/adminController');
 
-const ensureAuthMiddleware = require('../middlewares/authMiddleware');
+const ensureAuthMiddleware = require('../middlewares/ensureAuthMiddleware');
 
 const ensureAdminMiddleware = require('../middlewares/ensureAdminMiddleware');
 
