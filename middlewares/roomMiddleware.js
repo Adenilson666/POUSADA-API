@@ -14,7 +14,7 @@ const trimmedNumber = String(number).trim();
     throw new AppError('O campo "number" não pode estar vazio.', 400);
 }
 
-if (!type || !ALLOWED_TYPES.has(type)) {
+if (!type || !ALLOWED_TYPES.includes(type)) {
     throw new AppError("type inválido: Use 'single', 'double' ou 'suite'.", 400);
 }
 
