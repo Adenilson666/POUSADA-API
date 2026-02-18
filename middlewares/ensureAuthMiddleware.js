@@ -8,7 +8,13 @@ module.exports = (req, res, next) => {
     throw new AppError('Token não fornecido.', 401);
   }
 
-  const [scheme, token] = authHeader.trim().split(' ');
+  const parts = authHeader.trim().split(' ');
+
+  if (parts.length !== 2) {
+    throw new AppError('Formato de token inválido.', 401);
+  }
+
+  const [scheme, token] = parts;
 
   if (scheme !== 'Bearer' || !token) {
     throw new AppError('Formato de token inválido.', 401);

@@ -7,7 +7,8 @@ module.exports = (req, res, next) => {
   }
 
   // autenticado, mas não é admin
-  if (req.user.role !== 'admin') {
+  const role = String(req.user.role).toLowerCase();
+  if (role !== 'admin') {
     throw new AppError('Acesso negado. Permissão de administrador necessária.', 403);
   }
 
