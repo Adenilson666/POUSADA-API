@@ -4,11 +4,15 @@ const app = express();
 
 const userRouter = require('./routes/userRouter');
 
+const adminRouter = require('./routes/adminRouter');
+
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
 app.use(express.json());
 
 app.use(userRouter);
+
+app.use(adminRouter);
 
 app.use(errorMiddleware);
 
