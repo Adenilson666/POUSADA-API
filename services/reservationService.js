@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Reservation, Room } = require('../models');
+const { Reservation, User, Room } = require('../models');
 const AppError = require('../errors/appError');
 
 const ACTIVE_STATUSES = ['confirmed', 'pending'];
@@ -41,12 +41,32 @@ const createReservation = async ({ user_id, room_id, check_in, check_out }) => {
 const listMyReservations = async (user_id) => {
     return Reservation.findAll({
         where: { user_id },
+        include: [
+            {
+                model: Room,
+                as: 'room',
+                attributes: ['id', 'number', 'type', 'price_per_night']
+            },
+        ],
+
         order: [['check_in', 'DESC']]
     });
 };
 
 const listAllReservations = async () => {
     return Reservation.findAll({
+        include: [
+            {
+                model: User,
+                as: 'user',
+                attributes: ['id', 'name', 'email', 'role']
+            },
+            {
+                model: Room,
+                as: 'room',
+                attributes: ['id', 'number', 'type', 'price_per_night']
+            },
+        ],
         order: [['check_in', 'DESC']]
     });
 };
@@ -61,7 +81,7 @@ const cancelReservation = async ({ reservation_id, user_id, role}) => {
         throw new AppError('Acesso negado. Somente o administrador pode cancelar esta reserva.', 403);
     }
 
-    if (reservation.status === 'canceled') {
+    if (reservation.status === 'cancelled') {
         return reservation;
     }
 
@@ -69,7 +89,7 @@ const cancelReservation = async ({ reservation_id, user_id, role}) => {
         throw new AppError('Não é possível cancelar uma reserva já finalizada.', 400);
     }
 
-    reservation.status = 'canceled';
+    reservation.status = 'cancelled';
     await reservation.save();
     return reservation;
 };
