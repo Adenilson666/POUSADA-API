@@ -38,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     Room.associate = function(models) {
-        // associações podem ser definidas aqui
+        Room.hasMany(models.Reservation, { foreignKey: 'room_id', as: 'reservations' });
     };
 
     return Room;
