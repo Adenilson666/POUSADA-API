@@ -2,7 +2,16 @@ openapi: 3.0.3
 info:
   title: Pousada API - Admin
   version: 1.0.0
-  description: Documentação das rotas administrativas. Requer JWT (Bearer) e role ADMIN.
+  description: |
+    Documentação das rotas administrativas. Requer JWT (Bearer) e role ADMIN.
+
+    ## 🔐 Como usar o token (JWT)
+    1) Faça login em **POST /login** (com usuário ADMIN)
+    2) Copie o campo **token**
+    3) No Swagger, clique em **Authorize** e cole:
+       **Bearer SEU_TOKEN_AQUI**
+    4) Ou no Insomnia/Postman use o header:
+       **Authorization: Bearer SEU_TOKEN_AQUI**
 
 servers:
   - url: http://localhost:3002
@@ -19,6 +28,9 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        Use o token JWT no formato:
+        **Authorization: Bearer <token>**
 
   schemas:
     Error:
@@ -26,94 +38,81 @@ components:
       properties:
         message:
           type: string
-      example:
-        message: Acesso negado.
 
     UserListItem:
       type: object
       properties:
-        id: { type: integer, example: 1 }
-        name: { type: string, example: João }
-        email: { type: string, example: joao@email.com }
-        role: { type: string, example: USER }
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        role: { type: string }
 
     Room:
       type: object
       properties:
-        id: { type: integer, example: 1 }
-        number: { type: string, example: "001" }
+        id: { type: integer }
+        number: { type: string }
         type:
           type: string
           enum: [single, double, suite]
-          example: suite
         price_per_night:
           type: string
-          example: "1500.00"
         is_active:
           type: boolean
-          example: true
         created_at:
           type: string
-          example: "2026-02-19T00:00:00.000Z"
         updated_at:
           type: string
-          example: "2026-02-19T00:00:00.000Z"
 
     CreateRoomRequest:
       type: object
       required: [number, type, price_per_night]
       properties:
-        number: { type: string, example: "010" }
+        number: { type: string }
         type:
           type: string
           enum: [single, double, suite]
-          example: single
         price_per_night:
           type: number
-          example: 150
         is_active:
           type: boolean
-          example: true
 
     UpdateRoomRequest:
       type: object
       properties:
-        number: { type: string, example: "011" }
+        number: { type: string }
         type:
           type: string
           enum: [single, double, suite]
-          example: double
         price_per_night:
           type: number
-          example: 280
         is_active:
           type: boolean
-          example: true
 
     ReservationWithUserAndRoom:
       type: object
       properties:
-        id: { type: integer, example: 1 }
-        user_id: { type: integer, example: 3 }
-        room_id: { type: integer, example: 1 }
-        check_in: { type: string, example: "2026-03-10" }
-        check_out: { type: string, example: "2026-03-15" }
-        status: { type: string, example: pending }
+        id: { type: integer }
+        user_id: { type: integer }
+        room_id: { type: integer }
+        check_in: { type: string }
+        check_out: { type: string }
+        status: { type: string }
         user:
           type: object
           properties:
-            id: { type: integer, example: 3 }
-            name: { type: string, example: João }
-            email: { type: string, example: joao@email.com }
-            role: { type: string, example: USER }
+            id: { type: integer }
+            name: { type: string }
+            email: { type: string }
+            role: { type: string }
         room:
           type: object
           properties:
-            id: { type: integer, example: 1 }
-            number: { type: string, example: "001" }
-            type: { type: string, example: suite }
-            price_per_night: { type: string, example: "1500.00" }
-            is_active: { type: boolean, example: true }
+            id: { type: integer }
+            number: { type: string }
+            type: { type: string }
+            price_per_night: { type: string }
+            is_active: { type: boolean }
 
 paths:
   /admin/users:
@@ -130,16 +129,36 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/UserListItem" }
+              examples:
+                usuarios:
+                  summary: Exemplo de lista
+                  value:
+                    - id: 1
+                      name: "Admin"
+                      email: "admin@pousada.com"
+                      role: "ADMIN"
+                    - id: 3
+                      name: "João"
+                      email: "joao@email.com"
+                      role: "USER"
         "401":
           description: Token inválido ou ausente
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                sem_token:
+                  value:
+                    message: "Token não fornecido."
         "403":
           description: Acesso negado (não admin)
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                nao_admin:
+                  value:
+                    message: "Acesso negado. Permissão de administrador necessária."
 
   /admin/rooms:
     get:
@@ -155,6 +174,23 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/Room" }
+              examples:
+                lista:
+                  value:
+                    - id: 1
+                      number: "001"
+                      type: "suite"
+                      price_per_night: "1500.00"
+                      is_active: true
+                      created_at: "2026-02-19T00:00:00.000Z"
+                      updated_at: "2026-02-19T00:00:00.000Z"
+                    - id: 2
+                      number: "002"
+                      type: "single"
+                      price_per_night: "150.00"
+                      is_active: false
+                      created_at: "2026-02-19T00:00:00.000Z"
+                      updated_at: "2026-02-19T00:00:00.000Z"
 
     post:
       tags: [Admin - Rooms]
@@ -166,22 +202,48 @@ paths:
         content:
           application/json:
             schema: { $ref: "#/components/schemas/CreateRoomRequest" }
+            examples:
+              criar_quarto:
+                summary: Exemplo de criação
+                value:
+                  number: "008"
+                  type: "double"
+                  price_per_night: 320
+                  is_active: true
       responses:
         "201":
           description: Quarto criado
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Room" }
+              examples:
+                sucesso:
+                  value:
+                    id: 8
+                    number: "008"
+                    type: "double"
+                    price_per_night: "320.00"
+                    is_active: true
+                    created_at: "2026-02-19T00:00:00.000Z"
+                    updated_at: "2026-02-19T00:00:00.000Z"
         "400":
           description: Validação falhou
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                tipo_invalido:
+                  value:
+                    message: "type inválido. Use: 'single', 'double' ou 'suite'."
         "409":
           description: Número de quarto duplicado
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                duplicado:
+                  value:
+                    message: "Número de quarto já cadastrado."
 
   /admin/rooms/{id}:
     patch:
@@ -199,22 +261,30 @@ paths:
         content:
           application/json:
             schema: { $ref: "#/components/schemas/UpdateRoomRequest" }
+            examples:
+              atualizar_preco:
+                summary: Atualizar preço
+                value:
+                  price_per_night: 180
+              desativar:
+                summary: Desativar (via update)
+                value:
+                  is_active: false
       responses:
         "200":
           description: Quarto atualizado
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Room" }
-        "400":
-          description: Validação falhou
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
         "404":
           description: Quarto não encontrado
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                nao_encontrado:
+                  value:
+                    message: "Quarto não encontrado."
 
     delete:
       tags: [Admin - Rooms]
@@ -231,16 +301,10 @@ paths:
           description: Quarto desativado
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  message: { type: string, example: Quarto desativado com sucesso. }
-                  room: { $ref: "#/components/schemas/Room" }
-        "404":
-          description: Quarto não encontrado
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                sucesso:
+                  value:
+                    message: "Quarto desativado com sucesso."
 
   /admin/reservations:
     get:
@@ -256,12 +320,31 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/ReservationWithUserAndRoom" }
+              examples:
+                lista_reservas:
+                  value:
+                    - id: 1
+                      user_id: 3
+                      room_id: 1
+                      check_in: "2026-03-10"
+                      check_out: "2026-03-15"
+                      status: "pending"
+                      user:
+                        id: 3
+                        name: "João"
+                        email: "joao@email.com"
+                        role: "USER"
+                      room:
+                        id: 1
+                        number: "001"
+                        type: "suite"
+                        price_per_night: "1500.00"
+                        is_active: true
 
   /admin/reservations/{id}:
     patch:
       tags: [Admin - Reservations]
       summary: Cancelar reserva (admin)
-      description: Rota administrativa que cancela uma reserva pelo ID.
       security:
         - bearerAuth: []
       parameters:
@@ -274,18 +357,19 @@ paths:
           description: Reserva cancelada
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  message: { type: string, example: Reserva cancelada com sucesso. }
-                  reservation: { $ref: "#/components/schemas/ReservationWithUserAndRoom" }
-        "400":
-          description: Validação falhou
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                sucesso:
+                  value:
+                    message: "Reserva cancelada com sucesso."
+                    reservation:
+                      id: 1
+                      status: "cancelled"
         "404":
           description: Reserva não encontrada
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                nao_encontrada:
+                  value:
+                    message: "Reserva não encontrada."

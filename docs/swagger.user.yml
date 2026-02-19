@@ -2,7 +2,16 @@ openapi: 3.0.3
 info:
   title: Pousada API - User
   version: 1.0.0
-  description: Documentação das rotas públicas e do usuário autenticado.
+  description: |
+    Documentação das rotas públicas e do usuário autenticado.
+
+    ## 🔐 Como usar o token (JWT)
+    1) Faça login em **POST /login**
+    2) Copie o campo **token** da resposta
+    3) No Swagger, clique em **Authorize** e cole:
+       **Bearer SEU_TOKEN_AQUI**
+    4) Ou no Insomnia/Postman use o header:
+       **Authorization: Bearer SEU_TOKEN_AQUI**
 
 servers:
   - url: http://localhost:3002
@@ -19,6 +28,9 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        Use o token JWT no formato:
+        **Authorization: Bearer <token>**
 
   schemas:
     Error:
@@ -26,100 +38,75 @@ components:
       properties:
         message:
           type: string
-      example:
-        message: Erro de exemplo.
 
     RegisterRequest:
       type: object
       required: [name, email, password]
       properties:
-        name:
-          type: string
-          example: João Silva
-        email:
-          type: string
-          example: joao@email.com
-        password:
-          type: string
-          example: "123456"
+        name: { type: string }
+        email: { type: string }
+        password: { type: string }
 
     RegisterResponse:
       type: object
       properties:
-        id: { type: integer, example: 10 }
-        name: { type: string, example: João Silva }
-        email: { type: string, example: joao@email.com }
-        role: { type: string, example: USER }
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        role: { type: string }
 
     LoginRequest:
       type: object
       required: [email, password]
       properties:
-        email:
-          type: string
-          example: joao@email.com
-        password:
-          type: string
-          example: "123456"
+        email: { type: string }
+        password: { type: string }
 
     LoginResponse:
       type: object
       properties:
-        token:
-          type: string
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token: { type: string }
 
     Room:
       type: object
       properties:
-        id: { type: integer, example: 1 }
-        number: { type: string, example: "001" }
+        id: { type: integer }
+        number: { type: string }
         type:
           type: string
           enum: [single, double, suite]
-          example: suite
         price_per_night:
           type: string
-          example: "1500.00"
         is_active:
           type: boolean
-          example: true
         created_at:
           type: string
-          example: "2026-02-19T00:00:00.000Z"
         updated_at:
           type: string
-          example: "2026-02-19T00:00:00.000Z"
 
     CreateReservationRequest:
       type: object
       required: [room_id, check_in, check_out]
       properties:
-        room_id: { type: integer, example: 1 }
+        room_id: { type: integer }
         check_in:
           type: string
           description: "Formato YYYY-MM-DD"
-          example: "2026-03-10"
         check_out:
           type: string
           description: "Formato YYYY-MM-DD"
-          example: "2026-03-15"
 
     Reservation:
       type: object
       properties:
-        id: { type: integer, example: 1 }
-        user_id: { type: integer, example: 3 }
-        room_id: { type: integer, example: 1 }
-        check_in: { type: string, example: "2026-03-10" }
-        check_out: { type: string, example: "2026-03-15" }
-        status: { type: string, example: pending }
-        created_at:
-          type: string
-          example: "2026-02-19T00:00:00.000Z"
-        updated_at:
-          type: string
-          example: "2026-02-19T00:00:00.000Z"
+        id: { type: integer }
+        user_id: { type: integer }
+        room_id: { type: integer }
+        check_in: { type: string }
+        check_out: { type: string }
+        status: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
 
     ReservationWithRoom:
       allOf:
@@ -129,75 +116,135 @@ components:
             room:
               type: object
               properties:
-                id: { type: integer, example: 1 }
-                number: { type: string, example: "001" }
-                type: { type: string, example: suite }
-                price_per_night: { type: string, example: "1500.00" }
+                id: { type: integer }
+                number: { type: string }
+                type: { type: string }
+                price_per_night: { type: string }
 
 paths:
   /register:
     post:
       tags: [Auth]
       summary: Registrar usuário
-      description: Cria um novo usuário. Possui rate limit.
+      description: |
+        Cria um novo usuário.
+        Possui rate limit (proteção contra muitas requisições).
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: "#/components/schemas/RegisterRequest" }
+            examples:
+              exemplo_padrao:
+                summary: Cadastro padrão
+                value:
+                  name: "João Silva"
+                  email: "joao@email.com"
+                  password: "123456"
       responses:
         "201":
           description: Usuário criado
           content:
             application/json:
               schema: { $ref: "#/components/schemas/RegisterResponse" }
+              examples:
+                sucesso:
+                  summary: Retorno de sucesso
+                  value:
+                    id: 10
+                    name: "João Silva"
+                    email: "joao@email.com"
+                    role: "USER"
         "400":
           description: Validação falhou
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                campos_obrigatorios:
+                  summary: Campos obrigatórios
+                  value:
+                    message: "Nome, e-mail e senha são obrigatórios."
         "409":
           description: Email já cadastrado
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                email_existente:
+                  summary: Email duplicado
+                  value:
+                    message: "E-mail já cadastrado."
         "429":
           description: Rate limit atingido
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                rate_limit:
+                  summary: Muitas requisições
+                  value:
+                    message: "Muitas requisições. Tente novamente mais tarde."
 
   /login:
     post:
       tags: [Auth]
       summary: Login do usuário
-      description: Realiza login e retorna token JWT. Possui rate limit.
+      description: |
+        Realiza login e retorna token JWT.
+        Possui rate limit.
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: "#/components/schemas/LoginRequest" }
+            examples:
+              login_padrao:
+                summary: Login padrão
+                value:
+                  email: "joao@email.com"
+                  password: "123456"
       responses:
         "200":
           description: Token JWT
           content:
             application/json:
               schema: { $ref: "#/components/schemas/LoginResponse" }
+              examples:
+                sucesso:
+                  summary: Retorno com token
+                  value:
+                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         "400":
           description: Validação falhou
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                body_invalido:
+                  summary: Body inválido
+                  value:
+                    message: "E-mail e senha são obrigatórios."
         "401":
           description: Credenciais inválidas
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                credenciais_invalidas:
+                  summary: Login falhou
+                  value:
+                    message: "E-mail ou senha inválidos."
         "429":
           description: Rate limit atingido
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                rate_limit:
+                  summary: Muitas requisições
+                  value:
+                    message: "Muitas requisições. Tente novamente mais tarde."
 
   /rooms:
     get:
@@ -211,11 +258,32 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/Room" }
+              examples:
+                lista_quartos:
+                  summary: Exemplo de lista
+                  value:
+                    - id: 1
+                      number: "001"
+                      type: "suite"
+                      price_per_night: "1500.00"
+                      is_active: true
+                      created_at: "2026-02-19T00:00:00.000Z"
+                      updated_at: "2026-02-19T00:00:00.000Z"
+                    - id: 3
+                      number: "003"
+                      type: "double"
+                      price_per_night: "280.00"
+                      is_active: true
+                      created_at: "2026-02-19T00:00:00.000Z"
+                      updated_at: "2026-02-19T00:00:00.000Z"
 
   /reservations:
     post:
       tags: [Reservations]
       summary: Criar reserva (usuário autenticado)
+      description: |
+        Cria uma reserva para o usuário logado.
+        Requer token JWT no header Authorization.
       security:
         - bearerAuth: []
       requestBody:
@@ -223,32 +291,75 @@ paths:
         content:
           application/json:
             schema: { $ref: "#/components/schemas/CreateReservationRequest" }
+            examples:
+              reserva_padrao:
+                summary: Reserva padrão
+                value:
+                  room_id: 1
+                  check_in: "2026-03-10"
+                  check_out: "2026-03-15"
+              conflito_exemplo:
+                summary: Exemplo que pode gerar conflito
+                value:
+                  room_id: 1
+                  check_in: "2026-03-12"
+                  check_out: "2026-03-18"
       responses:
         "201":
           description: Reserva criada
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Reservation" }
+              examples:
+                sucesso:
+                  summary: Retorno de sucesso
+                  value:
+                    id: 1
+                    user_id: 3
+                    room_id: 1
+                    check_in: "2026-03-10"
+                    check_out: "2026-03-15"
+                    status: "pending"
+                    created_at: "2026-02-19T00:00:00.000Z"
+                    updated_at: "2026-02-19T00:00:00.000Z"
         "400":
           description: Validação falhou
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                datas_invalidas:
+                  summary: Datas inválidas
+                  value:
+                    message: "Datas inválidas: check_in deve ser antes de check_out."
         "401":
           description: Token inválido ou ausente
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                sem_token:
+                  summary: Sem token
+                  value:
+                    message: "Token não fornecido."
         "409":
-          description: Conflito de datas (quarto já reservado)
+          description: Conflito de datas
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                conflito:
+                  summary: Quarto já reservado
+                  value:
+                    message: "Conflito: este quarto já está reservado nesse período."
 
   /reservations/me:
     get:
       tags: [Reservations]
       summary: Listar minhas reservas (inclui quarto)
+      description: |
+        Retorna apenas as reservas do usuário autenticado.
+        Inclui informações do quarto via include (room).
       security:
         - bearerAuth: []
       responses:
@@ -259,8 +370,30 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/ReservationWithRoom" }
+              examples:
+                minhas_reservas:
+                  summary: Exemplo de retorno
+                  value:
+                    - id: 1
+                      user_id: 3
+                      room_id: 1
+                      check_in: "2026-03-10"
+                      check_out: "2026-03-15"
+                      status: "pending"
+                      created_at: "2026-02-19T00:00:00.000Z"
+                      updated_at: "2026-02-19T00:00:00.000Z"
+                      room:
+                        id: 1
+                        number: "001"
+                        type: "suite"
+                        price_per_night: "1500.00"
         "401":
           description: Token inválido ou ausente
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                token_invalido:
+                  summary: Token inválido
+                  value:
+                    message: "Token inválido ou expirado."
