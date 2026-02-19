@@ -20,7 +20,7 @@ app.use(express.json());
 
 app.use('/docs', swaggerUi.serveFiles(userSwagger), swaggerUi.setup(userSwagger, { explorer: true }));
 
-app.use('/docs/admin', swaggerUi.serveFiles(adminSwagger), swaggerUi.setup(adminSwagger, { explorer: true }));
+app.use('/admin-docs', swaggerUi.serveFiles(adminSwagger), swaggerUi.setup(adminSwagger, { explorer: true }));
 
 app.use(userRouter);
 
