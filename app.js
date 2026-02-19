@@ -8,7 +8,19 @@ const adminRouter = require('./routes/adminRouter');
 
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
+const swaggerUi = require('swagger-ui-express');
+
+const YAML = require('yamljs');
+
+const userSwagger = YAML.load('./docs/swagger.user.yml');
+
+const adminSwagger = YAML.load('./docs/swagger.admin.yml');
+
 app.use(express.json());
+
+app.use('/docs', swaggerUi.serveFiles(userSwagger), swaggerUi.setup(userSwagger, { explorer: true }));
+
+app.use('/docs/admin', swaggerUi.serveFiles(adminSwagger), swaggerUi.setup(adminSwagger, { explorer: true }));
 
 app.use(userRouter);
 
