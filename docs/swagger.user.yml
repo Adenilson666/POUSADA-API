@@ -1,0 +1,266 @@
+openapi: 3.0.3
+info:
+  title: Pousada API - User
+  version: 1.0.0
+  description: Documentação das rotas públicas e do usuário autenticado.
+
+servers:
+  - url: http://localhost:3002
+    description: Local
+
+tags:
+  - name: Auth
+  - name: Rooms
+  - name: Reservations
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      example:
+        message: Erro de exemplo.
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          example: João Silva
+        email:
+          type: string
+          example: joao@email.com
+        password:
+          type: string
+          example: "123456"
+
+    RegisterResponse:
+      type: object
+      properties:
+        id: { type: integer, example: 10 }
+        name: { type: string, example: João Silva }
+        email: { type: string, example: joao@email.com }
+        role: { type: string, example: USER }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          example: joao@email.com
+        password:
+          type: string
+          example: "123456"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    Room:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        number: { type: string, example: "001" }
+        type:
+          type: string
+          enum: [single, double, suite]
+          example: suite
+        price_per_night:
+          type: string
+          example: "1500.00"
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          example: "2026-02-19T00:00:00.000Z"
+        updated_at:
+          type: string
+          example: "2026-02-19T00:00:00.000Z"
+
+    CreateReservationRequest:
+      type: object
+      required: [room_id, check_in, check_out]
+      properties:
+        room_id: { type: integer, example: 1 }
+        check_in:
+          type: string
+          description: "Formato YYYY-MM-DD"
+          example: "2026-03-10"
+        check_out:
+          type: string
+          description: "Formato YYYY-MM-DD"
+          example: "2026-03-15"
+
+    Reservation:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        user_id: { type: integer, example: 3 }
+        room_id: { type: integer, example: 1 }
+        check_in: { type: string, example: "2026-03-10" }
+        check_out: { type: string, example: "2026-03-15" }
+        status: { type: string, example: pending }
+        created_at:
+          type: string
+          example: "2026-02-19T00:00:00.000Z"
+        updated_at:
+          type: string
+          example: "2026-02-19T00:00:00.000Z"
+
+    ReservationWithRoom:
+      allOf:
+        - $ref: "#/components/schemas/Reservation"
+        - type: object
+          properties:
+            room:
+              type: object
+              properties:
+                id: { type: integer, example: 1 }
+                number: { type: string, example: "001" }
+                type: { type: string, example: suite }
+                price_per_night: { type: string, example: "1500.00" }
+
+paths:
+  /register:
+    post:
+      tags: [Auth]
+      summary: Registrar usuário
+      description: Cria um novo usuário. Possui rate limit.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201":
+          description: Usuário criado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RegisterResponse" }
+        "400":
+          description: Validação falhou
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Email já cadastrado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          description: Rate limit atingido
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /login:
+    post:
+      tags: [Auth]
+      summary: Login do usuário
+      description: Realiza login e retorna token JWT. Possui rate limit.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Token JWT
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LoginResponse" }
+        "400":
+          description: Validação falhou
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          description: Rate limit atingido
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /rooms:
+    get:
+      tags: [Rooms]
+      summary: Listar quartos ativos (público)
+      responses:
+        "200":
+          description: Lista de quartos ativos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Room" }
+
+  /reservations:
+    post:
+      tags: [Reservations]
+      summary: Criar reserva (usuário autenticado)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateReservationRequest" }
+      responses:
+        "201":
+          description: Reserva criada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Reservation" }
+        "400":
+          description: Validação falhou
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          description: Token inválido ou ausente
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Conflito de datas (quarto já reservado)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /reservations/me:
+    get:
+      tags: [Reservations]
+      summary: Listar minhas reservas (inclui quarto)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista das reservas do usuário (com dados do quarto)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ReservationWithRoom" }
+        "401":
+          description: Token inválido ou ausente
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }

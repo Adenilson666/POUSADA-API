@@ -155,16 +155,6 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/Room" }
-        "401":
-          description: Token inválido ou ausente
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
-        "403":
-          description: Acesso negado (não admin)
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
 
     post:
       tags: [Admin - Rooms]
@@ -266,16 +256,6 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/ReservationWithUserAndRoom" }
-        "401":
-          description: Token inválido ou ausente
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
-        "403":
-          description: Acesso negado (não admin)
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
 
   /admin/reservations/{id}:
     patch:
